@@ -1,81 +1,43 @@
 ﻿#include <iostream>
-#include <random>
-#include <set>
-#include <cctype>
+#include <vector>
 
 using namespace std;
 
-class Score {
-private:
-	int* list;
-	int size;
-	int pos;
-public:
-	Score(int size): size(size), pos(0) {
-		list = new int[size];
-	}
+const int SUBJECT_NO = 3;
 
-	~Score() {
-		delete[] list;
-	}
-
-	bool add(const int value) {
-		if (pos > size - 1) {
-			return false;
-		} else {
-			list[pos] = value;
-			pos++;
-			return true;
-		}
-	}
-
-	int sum() {
-		int result = 0;
-		for (int i = 0; i < pos; ++i) {
-			result += list[i];
-		}
-		return result;
-	}
-
-	double average() {
-		return static_cast<double>(sum()) / pos;
-	}
-
-	void print(const string& command) {
-		if (command == "add") {
-			cout << "Enter Score: ";
-			int value;
-			cin >> value;
-			if (value < 0) {
-				cout << "System: " << value << "can't be score" << endl;
-			} else if (add(value)) {
-				cout << "System: " << value << " added." << endl;
-			} else {
-				cout << "System: Too many score" << endl;
-			}
-		} else if (command == "sum") {
-			cout << "System: Sum: " << sum() << endl;
-		} else if (command == "average") {
-			if (pos == 0)
-				cout << "1개 이상의 점수가 입력되어야 합니다." << endl;
-			else
-				cout << "System: Avg: " << average() << endl;
-		}
-	}
+struct StudentInfo {
+	string name;
+	int scores[SUBJECT_NO];
+	int sum;
+	float average;
 };
+// 이상 제약사항
 
 int main() {
-	cout << "Enter the score count: ";
-	int maxSize;
-	cin >> maxSize;
-	Score score(maxSize);
-	string command;
-	while (command != "quit") {
-		cout << "Enter Command: (add, sum, average, quit) ";
-		cin >> command;
-		for (char& i : command) {
-			i = std::tolower(i);
+	cout << " >> " << endl;
+	signed int person;
+	cin >> person;
+	vector<StudentInfo> students(person);
+	for (StudentInfo& student: students) {
+		cin >> student.name;
+		student.sum = 0;
+		for (int& i: student.scores) {
+			cin >> i;
+			student.sum += i;
 		}
-		score.print(command);
+		student.average = static_cast<float>(student.sum) / SUBJECT_NO;
+	}
+	
+	//for (StudentInfo& student : students) {
+	//	cout << student.name << '\t';
+	//	for (int& i : student.scores)
+	//		cout << i << '\t';
+	//	cout << student.sum << '\t' << student.average << endl;
+	//}
+	for (vector<StudentInfo>::iterator/*auto*/ it = students.begin(); it != students.end(); it++) {
+		cout << it->name << '\t';
+		for (int& i : it->scores)
+			cout << i << '\t';
+		cout << it->sum << '\t' << it->average << endl;
 	}
 }
