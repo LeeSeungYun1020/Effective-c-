@@ -1,107 +1,73 @@
 ﻿#include <iostream>
+#include <utility>
 #include <vector>
-#include <cassert>
-#include <cctype>
 
 using namespace std;
 
-struct Rectangle {
-	int width;
-	int height;
+class Student {
+private:
+	string name;
+	float gpa;
+public:
+	Student(const string& name, const float gpa) :name(name), gpa(gpa) {}
+	~Student() = default;
+
+	void setName(const string& name) {
+		this->name = name;
+	}
+	void setGPA(const float gpa) {
+		this->gpa = gpa;
+	}
+	const string& getName() const {
+		return name;
+	}
+	float getGPA() const {
+		return gpa;
+	}
 };
 
-enum CommandType {
-	ADD,
-	SORT,
-	PRINT,
-	CLEAR,
-	EXIT
-};
-
-// 이상 제약 조건
-
-CommandType getCommandType() {
-	string command;
-	cin >> command;
-	for (char& c: command) {
-		c = std::toupper(c);
-	}
-	if (command == "ADD") {
-		return ADD;
-	} else if (command == "SORT") {
-		return SORT;
-	} else if (command == "PRINT") {
-		return PRINT;
-	} else if (command == "CLEAR") {
-		return CLEAR;
-	} else if (command == "EXIT") {
-		return EXIT;
-	} else {
-		cout << "Please check command. (add, sort, print, clear, exit)" << endl;
-		return getCommandType();
+void print(const vector<Student>& students) {
+	cout << "Student Count: " << students.size() << endl;
+	for(Student student: students) {
+		cout << "\tName: " << student.getName() << " GPA: " << student.getGPA() << endl;
 	}
 }
 
-Rectangle& getRectangle() {
-	auto rectangle = new Rectangle;
-	cin >> rectangle->width >> rectangle->height;
-	return *rectangle;
-}
-
-void print(const vector<Rectangle>& rectangles) {
-	cout << "Rectangle Count: " << rectangles.size() << endl;
-	for(const Rectangle& r: rectangles) {
-		cout << r.width << '\t' << r.height << '\t' << (r.width * r.height) << endl;
-	}
-}
-
-void sort(vector<Rectangle>& rectangles) {
-	for (unsigned int i = 0; i < rectangles.size() - 1; i++) {
-		int min = i;
-		for (unsigned int j = i + 1; j < rectangles.size(); j++) {
-			if (rectangles[min].width * rectangles[min].height > rectangles[j].width* rectangles[j].height)
-				min = j;
+void sort(vector<Student>& students) {
+	for(unsigned int i = 0; i < students.size() - 1; i++) {
+		unsigned int max = i;
+		for(unsigned int j = i + 1; j < students.size(); j++) {
+			if (students[i].getGPA() < students[j].getGPA()) {
+				max = j;
+			} else if (students[i].getGPA() == students[j].getGPA() && students[i].getName().compare(students[j].getName()) > 0) {
+				max = j;
+			}
+			
 		}
-		if(min != i) {
-			const Rectangle tem = rectangles[i];
-			rectangles[i] = rectangles[min];
-			rectangles[min] = tem;
+		if(max != i) {
+			swap(students[i], students[max]);
 		}
 	}
 }
 
 int main() {
-	vector<Rectangle> rectangles;
-	while (true) {
-		const CommandType command = getCommandType();
-		switch (command) {
-			case ADD: {
-				const Rectangle& newRectangle = getRectangle();
-				rectangles.push_back(newRectangle);
-				break;
-			}
-			case PRINT: {
-				print(rectangles);
-				break;
-			}
-			case SORT: {
-				sort(rectangles);
-				print(rectangles);
-				break;
-			}
-			case CLEAR: {
-				rectangles.clear();
-				break;
-			}
-			case EXIT: {
-				break;
-			}
-			default: {
-				assert(false);
-				break;
-			}
-		}
-		if(command == EXIT)
-			break;
-	}
+	vector<Student> students;
+	Student s1("Kim", 3.5F);
+	students.push_back(s1);
+	Student s2("Park", 3.5F);
+	students.push_back(s2);
+	Student s3("Lee", 3.5F);
+	students.push_back(s3);
+	print(students);
+	sort(students); // descending
+	print(students);
+	Student& topStudent = students[0];
+	topStudent.setGPA(3.3F);
+	topStudent.setName("Yoon");
+	Student s4("Hong", 4.3F);
+	students.push_back(s4);
+	print(students);
+	sort(students);
+	print(students);
+	cout << "The Top Student: Name " << students[0].getName() << " GPA: " << students[0].getGPA() << endl;
 }
