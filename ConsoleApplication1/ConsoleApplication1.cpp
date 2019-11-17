@@ -4,70 +4,144 @@
 
 using namespace std;
 
+enum class MajorType { CE, EE, ME, UD };
+
+class Major {
+private:
+	MajorType majorType;
+public:
+	explicit Major(const MajorType& major = MajorType::UD): majorType(major) {}
+
+	const MajorType& getMajorType() const {
+		return majorType;
+	}
+
+	void setMajorType(const MajorType& majorType) {
+		this->majorType = majorType;
+	}
+
+	string toString() const {
+		switch (majorType) {
+			case MajorType::CE:
+				return "Computer Eng.";
+				break;
+			case MajorType::EE:
+				return "Electrical Eng.";
+				break;
+			case MajorType::ME:
+				return "Mechanical Eng.";
+				break;
+			case MajorType::UD:
+			default:
+				return "Undefined";
+				break;
+		}
+
+	}
+};
+
 class Student {
 private:
 	string name;
 	float gpa;
+	Major major;
 public:
-	Student(const string& name, const float gpa) :name(name), gpa(gpa) {}
-	~Student() = default;
+	explicit Student(string name, const float gpa, const MajorType& major)
+		: name(std::move(name)), gpa(gpa), major(Major(major)) {
+		print();
+	}
+
+	const string& getName() const {
+		return name;
+	}
+
+	float getGPA() const {
+		return gpa;
+	}
+
+	const MajorType& getMajor() const {
+		return major.getMajorType();
+	}
 
 	void setName(const string& name) {
 		this->name = name;
 	}
+
 	void setGPA(const float gpa) {
 		this->gpa = gpa;
 	}
-	const string& getName() const {
-		return name;
+
+	void setMajor(const MajorType& majorType) {
+		this->major.setMajorType(majorType);
 	}
-	float getGPA() const {
-		return gpa;
+
+	void print() const {
+		cout << "Name: " << name << " GPA: " << gpa << " Major: " << major.toString() << endl;
 	}
 };
 
-void print(const vector<Student>& students) {
-	cout << "Student Count: " << students.size() << endl;
-	for(Student student: students) {
-		cout << "\tName: " << student.getName() << " GPA: " << student.getGPA() << endl;
-	}
-}
+class School {
+private:
+	string schoolName;
+	vector<Student> students;
+public:
+	explicit School(string schoolName): schoolName(std::move(schoolName)) {}
 
-void sort(vector<Student>& students) {
-	for(unsigned int i = 0; i < students.size() - 1; i++) {
-		unsigned int max = i;
-		for(unsigned int j = i + 1; j < students.size(); j++) {
-			if (students[i].getGPA() < students[j].getGPA()) {
-				max = j;
-			} else if (students[i].getGPA() == students[j].getGPA() && students[i].getName().compare(students[j].getName()) > 0) {
-				max = j;
+	~School() {
+		students.clear();
+	}
+
+	void setSchoolName(const string& schoolName) {
+		this->schoolName = schoolName;
+	}
+
+	const string& getSchoolName() const {
+		return schoolName;
+	}
+
+	Student* addStudent(const string& studentName, const float gpa = 0.0F, const MajorType major = MajorType::UD) {
+		students.emplace_back(studentName, gpa, major);
+		return &students.back();
+	}
+
+	Student* addStudent(const string& studentName, const MajorType major = MajorType::UD) {
+		return addStudent(studentName, 0.0F, major);
+	}
+
+	void print() const {
+		cout << "School Name: " << schoolName << ", Count: " << students.size() << endl;
+		for (const Student& student : students)
+			student.print();
+	}
+
+	void sort() {
+		for (unsigned int i = 0; i < students.size() - 1; i++) {
+			int max = i;
+			for (unsigned int j = i + 1; j < students.size(); j++) {
+				if (students[max].getGPA() < students[j].getGPA())
+					max = j;
+				else if (students[max].getGPA() == students[j].getGPA() && 
+						 students[max].getName().compare(students[j].getName()) > 0
+				)
+					max = j;
 			}
-			
-		}
-		if(max != i) {
-			swap(students[i], students[max]);
+			if (max != i)
+				swap(students[max], students[i]);
 		}
 	}
-}
+};
 
 int main() {
-	vector<Student> students;
-	Student s1("Kim", 3.5F);
-	students.push_back(s1);
-	Student s2("Park", 3.5F);
-	students.push_back(s2);
-	Student s3("Lee", 3.5F);
-	students.push_back(s3);
-	print(students);
-	sort(students); // descending
-	print(students);
-	Student& topStudent = students[0];
-	topStudent.setGPA(3.3F);
-	topStudent.setName("Yoon");
-	Student s4("Hong", 4.3F);
-	students.push_back(s4);
-	print(students);
-	sort(students);
-	print(students);
-	cout << "The Top Student: Name " << students[0].getName() << " GPA: " << students[0].getGPA() << endl;
+	School pnu("PNU");
+	Student* kim = pnu.addStudent("Kim", MajorType::EE);
+	kim->setGPA(3.5F);
+	Student* hong = pnu.addStudent("Hong", MajorType::CE);
+	hong->setGPA(4.3F);
+	Student* lee = pnu.addStudent("Lee", 4.0F);
+	lee->setMajor(MajorType::CE);
+	Student* joo = pnu.addStudent("Joo", 1.5F);
+	joo->setMajor(MajorType::ME);
+	pnu.print();
+	pnu.sort(); // descending
+	pnu.print();
 }
