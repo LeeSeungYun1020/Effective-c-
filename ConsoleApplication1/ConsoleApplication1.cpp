@@ -1,43 +1,107 @@
 ﻿#include <iostream>
 #include <vector>
+#include <cassert>
+#include <cctype>
 
 using namespace std;
 
-const int SUBJECT_NO = 3;
-
-struct StudentInfo {
-	string name;
-	int scores[SUBJECT_NO];
-	int sum;
-	float average;
+struct Rectangle {
+	int width;
+	int height;
 };
-// 이상 제약사항
+
+enum CommandType {
+	ADD,
+	SORT,
+	PRINT,
+	CLEAR,
+	EXIT
+};
+
+// 이상 제약 조건
+
+CommandType getCommandType() {
+	string command;
+	cin >> command;
+	for (char& c: command) {
+		c = std::toupper(c);
+	}
+	if (command == "ADD") {
+		return ADD;
+	} else if (command == "SORT") {
+		return SORT;
+	} else if (command == "PRINT") {
+		return PRINT;
+	} else if (command == "CLEAR") {
+		return CLEAR;
+	} else if (command == "EXIT") {
+		return EXIT;
+	} else {
+		cout << "Please check command. (add, sort, print, clear, exit)" << endl;
+		return getCommandType();
+	}
+}
+
+Rectangle& getRectangle() {
+	auto rectangle = new Rectangle;
+	cin >> rectangle->width >> rectangle->height;
+	return *rectangle;
+}
+
+void print(const vector<Rectangle>& rectangles) {
+	cout << "Rectangle Count: " << rectangles.size() << endl;
+	for(const Rectangle& r: rectangles) {
+		cout << r.width << '\t' << r.height << '\t' << (r.width * r.height) << endl;
+	}
+}
+
+void sort(vector<Rectangle>& rectangles) {
+	for (unsigned int i = 0; i < rectangles.size() - 1; i++) {
+		int min = i;
+		for (unsigned int j = i + 1; j < rectangles.size(); j++) {
+			if (rectangles[min].width * rectangles[min].height > rectangles[j].width* rectangles[j].height)
+				min = j;
+		}
+		if(min != i) {
+			const Rectangle tem = rectangles[i];
+			rectangles[i] = rectangles[min];
+			rectangles[min] = tem;
+		}
+	}
+}
 
 int main() {
-	cout << " >> " << endl;
-	signed int person;
-	cin >> person;
-	vector<StudentInfo> students(person);
-	for (StudentInfo& student: students) {
-		cin >> student.name;
-		student.sum = 0;
-		for (int& i: student.scores) {
-			cin >> i;
-			student.sum += i;
+	vector<Rectangle> rectangles;
+	while (true) {
+		const CommandType command = getCommandType();
+		switch (command) {
+			case ADD: {
+				const Rectangle& newRectangle = getRectangle();
+				rectangles.push_back(newRectangle);
+				break;
+			}
+			case PRINT: {
+				print(rectangles);
+				break;
+			}
+			case SORT: {
+				sort(rectangles);
+				print(rectangles);
+				break;
+			}
+			case CLEAR: {
+				rectangles.clear();
+				break;
+			}
+			case EXIT: {
+				break;
+			}
+			default: {
+				assert(false);
+				break;
+			}
 		}
-		student.average = static_cast<float>(student.sum) / SUBJECT_NO;
-	}
-	
-	//for (StudentInfo& student : students) {
-	//	cout << student.name << '\t';
-	//	for (int& i : student.scores)
-	//		cout << i << '\t';
-	//	cout << student.sum << '\t' << student.average << endl;
-	//}
-	for (vector<StudentInfo>::iterator/*auto*/ it = students.begin(); it != students.end(); it++) {
-		cout << it->name << '\t';
-		for (int& i : it->scores)
-			cout << i << '\t';
-		cout << it->sum << '\t' << it->average << endl;
+		if(command == EXIT)
+			break;
 	}
 }
