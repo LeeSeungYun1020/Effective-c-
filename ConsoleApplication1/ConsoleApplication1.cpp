@@ -2,62 +2,141 @@
 
 using namespace std;
 
-class MyString {
-private:
-	char* str;
-	int size;
+class Matrix {
+	int** values;
+	int row, column;
 public:
-	explicit MyString(const char* str) {
-		size = std::strlen(str);
-		this->str = new char[size];
-		for (unsigned int i = 0; i < size; i++)
-			this->str[i] = str[i];
+	explicit Matrix(const unsigned int row, const unsigned int column) : row(row), column(column) {
+		values = new int*[row];
+		for (unsigned int i = 0; i < row; i++) {
+			values[i] = new int[column];
+			for (unsigned int j = 0; j < column; j++)
+				values[i][j] = 0;
+		}
 	}
 
-	explicit MyString(const MyString& copy) : size(copy.size) {
-		str = new char[size];
-		for (unsigned int i = 0; i < size; i++)
-			str[i] = copy.str[i];
+	Matrix(const Matrix& copy) : row(copy.row), column(copy.column) {
+		values = new int* [row];
+		for (unsigned int i = 0; i < row; i++) {
+			values[i] = new int[column];
+			for (unsigned int j = 0; j < column; j++)
+				values[i][j] = copy.values[i][j];
+		}
 	}
 
-	~MyString() {
-		delete[] str;
+	~Matrix() {
+		for (unsigned int i = 0; i < row; i++) {
+			delete[] values[i];
+		}
+		delete[] values;
+
 	}
 
-	bool set(const unsigned int position, const char ch) const {
-		if (position >= size)
-			return false;
-		str[position] = ch;
-		return true;
+	Matrix& operator=(const Matrix& other) {
+		if (this != &other) {
+			for (unsigned int i = 0; i < row; i++) {
+				delete[] values[i];
+			}
+			delete[] values;
+
+			row = other.row;
+			column = other.column;
+
+			values = new int* [row];
+			for (unsigned int i = 0; i < row; i++) {
+				values[i] = new int[column];
+				for (unsigned int j = 0; j < column; j++) {
+					values[i][j] = other.values[i][j];
+				}
+			}
+		}
+		return *this;
 	}
 
-	void print() const {
-		for (unsigned int i = 0; i < size; i++)
-			cout << str[i];
-		cout << endl;
+	Matrix& operator+=(const Matrix& other) {
+		if (row == other.row && column == other.column) {
+			for (unsigned int i = 0; i < row; i++)
+				for (unsigned int j = 0; j < column; j++)
+					values[i][j] += other.values[i][j];
+		} else {
+			throw logic_error("Can't ADD");
+		}
+
+		return *this;
 	}
 
-	int length() const {
-		return size;
+	Matrix operator+(const Matrix& other) const {
+		Matrix newMatrix(row, column);
+		if (row == other.row && column == other.column) {
+			for (unsigned int i = 0; i < row; i++)
+				for (unsigned int j = 0; j < column; j++)
+					newMatrix.values[i][j] = values[i][j] + other.values[i][j];
+		} else {
+			throw logic_error("Can't ADD");
+		}
+		return newMatrix;
 	}
 
-	char at(const unsigned int position) const {
-		if (position >= size)
-			throw length_error(&"Can't access "[position]);
-		return str[position];
+	Matrix operator*(const Matrix& other) const {
+		if (column != other.row) {
+			throw logic_error("Can't Multiply");
+		}
+		Matrix* newMatrix = new Matrix(row, other.column);
+		for (unsigned int i = 0; i < row; i++)
+			for (unsigned int j = 0; j < other.column; j++)
+				newMatrix->values[i][j] = values[i][j] * other.values[j][i];
+		return *newMatrix;
 	}
+
+	Matrix operator*(const int scala) const {
+		for (unsigned int i = 0; i < row; i++)
+			for (unsigned int j = 0; j < column; j++)
+				values[i][j] *= scala;
+		return *this;
+	}
+
+	bool operator==(const Matrix& other) const {
+		if (row == other.row && column == other.column) {
+			for (unsigned int i = 0; i < row; i++)
+				for (unsigned int j = 0; j < column; j++)
+					if (values[i][j] != other.values[i][j])
+						return false;
+			return true;
+		}
+		return false;
+	}
+
+	bool operator!=(const Matrix& other) const {
+		return !(*this == other);
+	}
+
+	friend ostream& operator<<(ostream& os, const Matrix& matrix);
+	friend istream& operator>>(istream& is, const Matrix& matrix);
 };
 
-int main() {
-	MyString str1("ABC");
-	str1.print();
-	{
-		MyString str2(str1);
-		str2.set(0, 'D');
-		str2.print();
+ostream& operator<<(ostream& os, const Matrix& matrix) {
+	for (unsigned int i = 0; i < matrix.row; i++) {
+		for (unsigned int j = 0; j < matrix.column; j++)
+			os << matrix.values[i][j] << '\t';
+		os << endl;
 	}
-	str1.print();
+	return os;
+}
 
-	for (int i = 0; i < str1.length(); i++)
-		cout << str1.at(i);
+istream& operator>>(istream& is, const Matrix& matrix) {
+	for (unsigned int i = 0; i < matrix.row; i++)
+		for (unsigned int j = 0; j < matrix.column; j++)
+			is >> matrix.values[i][j];
+	return is;
+}
+
+int main() {
+	Matrix m1(2, 2), m2(2, 2);
+	cin >> m1;
+	cin >> m2;
+	Matrix m3 = m1 + m2;
+	cout << m3 << endl;
+	Matrix m4 = m3 * 10;
+	cout << m3 << endl;
+	cout << m4 << endl;
 }
