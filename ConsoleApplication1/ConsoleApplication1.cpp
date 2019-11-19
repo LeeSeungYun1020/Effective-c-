@@ -1,142 +1,77 @@
 ﻿#include <iostream>
+#include <utility>
+#include <vector>
 
 using namespace std;
 
-class Matrix {
-	int** values;
-	int row, column;
+enum EmployeeLevel { 사원, 대리, 과장, 차장, 부장 };
+
+class Employee {
+	string name;
+	EmployeeLevel level;
 public:
-	explicit Matrix(const unsigned int row, const unsigned int column) : row(row), column(column) {
-		values = new int*[row];
-		for (unsigned int i = 0; i < row; i++) {
-			values[i] = new int[column];
-			for (unsigned int j = 0; j < column; j++)
-				values[i][j] = 0;
-		}
+	explicit Employee(string name, const EmployeeLevel& level) : name(move(name)), level(level) {}
+	explicit Employee(const Employee& copy) : name(copy.name), level(copy.level) {}
+	~Employee() = default;
+
+	const string& getName() const {
+		return name;
 	}
 
-	Matrix(const Matrix& copy) : row(copy.row), column(copy.column) {
-		values = new int* [row];
-		for (unsigned int i = 0; i < row; i++) {
-			values[i] = new int[column];
-			for (unsigned int j = 0; j < column; j++)
-				values[i][j] = copy.values[i][j];
-		}
+	const EmployeeLevel& getEmployeeLevel() const {
+		return level;
 	}
 
-	~Matrix() {
-		for (unsigned int i = 0; i < row; i++) {
-			delete[] values[i];
-		}
-		delete[] values;
-
+	void setName(const string& name) {
+		this->name = name;
 	}
 
-	Matrix& operator=(const Matrix& other) {
-		if (this != &other) {
-			for (unsigned int i = 0; i < row; i++) {
-				delete[] values[i];
-			}
-			delete[] values;
-
-			row = other.row;
-			column = other.column;
-
-			values = new int* [row];
-			for (unsigned int i = 0; i < row; i++) {
-				values[i] = new int[column];
-				for (unsigned int j = 0; j < column; j++) {
-					values[i][j] = other.values[i][j];
-				}
-			}
-		}
-		return *this;
+	void setLevel(const EmployeeLevel& level) {
+		this->level = level;
 	}
 
-	Matrix& operator+=(const Matrix& other) {
-		if (row == other.row && column == other.column) {
-			for (unsigned int i = 0; i < row; i++)
-				for (unsigned int j = 0; j < column; j++)
-					values[i][j] += other.values[i][j];
-		} else {
-			throw logic_error("Can't ADD");
-		}
-
-		return *this;
-	}
-
-	Matrix operator+(const Matrix& other) const {
-		Matrix newMatrix(row, column);
-		if (row == other.row && column == other.column) {
-			for (unsigned int i = 0; i < row; i++)
-				for (unsigned int j = 0; j < column; j++)
-					newMatrix.values[i][j] = values[i][j] + other.values[i][j];
-		} else {
-			throw logic_error("Can't ADD");
-		}
-		return newMatrix;
-	}
-
-	Matrix operator*(const Matrix& other) const {
-		if (column != other.row) {
-			throw logic_error("Can't Multiply");
-		}
-		Matrix* newMatrix = new Matrix(row, other.column);
-		for (unsigned int i = 0; i < row; i++)
-			for (unsigned int j = 0; j < other.column; j++)
-				newMatrix->values[i][j] = values[i][j] * other.values[j][i];
-		return *newMatrix;
-	}
-
-	Matrix operator*(const int scala) const {
-		for (unsigned int i = 0; i < row; i++)
-			for (unsigned int j = 0; j < column; j++)
-				values[i][j] *= scala;
-		return *this;
-	}
-
-	bool operator==(const Matrix& other) const {
-		if (row == other.row && column == other.column) {
-			for (unsigned int i = 0; i < row; i++)
-				for (unsigned int j = 0; j < column; j++)
-					if (values[i][j] != other.values[i][j])
-						return false;
-			return true;
-		}
-		return false;
-	}
-
-	bool operator!=(const Matrix& other) const {
-		return !(*this == other);
-	}
-
-	friend ostream& operator<<(ostream& os, const Matrix& matrix);
-	friend istream& operator>>(istream& is, const Matrix& matrix);
+	friend ostream& operator<<(ostream& os, const Employee& employee);
 };
 
-ostream& operator<<(ostream& os, const Matrix& matrix) {
-	for (unsigned int i = 0; i < matrix.row; i++) {
-		for (unsigned int j = 0; j < matrix.column; j++)
-			os << matrix.values[i][j] << '\t';
-		os << endl;
+class Manager : public Employee {
+	vector<Employee*> group;
+public:
+	explicit Manager(string name, const EmployeeLevel& level) : Employee(move(name), level) {}
+	explicit Manager(const Manager& copy) = default;
+
+	~Manager() {
+		for (auto employee : group)
+			delete employee;
+		group.clear();
 	}
+
+	void addEmployee(const Employee* employee) {
+		group.push_back(new Employee(*employee));
+	}
+
+	friend ostream& operator<<(ostream& os, const Manager& manager);
+};
+
+ostream& operator<<(ostream& os, const Employee& employee) {
+	os << employee.level << ' ' << employee.name << endl;
 	return os;
 }
 
-istream& operator>>(istream& is, const Matrix& matrix) {
-	for (unsigned int i = 0; i < matrix.row; i++)
-		for (unsigned int j = 0; j < matrix.column; j++)
-			is >> matrix.values[i][j];
-	return is;
+ostream& operator<<(ostream& os, const Manager& manager) {
+	os << manager.getEmployeeLevel() << ' ' << manager.getName() << endl
+		<< "List of employees managed by me" << endl;
+	for (auto employee : manager.group)
+		os << *employee;
+	return os;
 }
 
 int main() {
-	Matrix m1(2, 2), m2(2, 2);
-	cin >> m1;
-	cin >> m2;
-	Matrix m3 = m1 + m2;
-	cout << m3 << endl;
-	Matrix m4 = m3 * 10;
-	cout << m3 << endl;
-	cout << m4 << endl;
+	Employee e1("홍", 사원), e2("김", 대리), e3("차", 사원);
+	cout << e1 << e2 << e3;
+	Manager m1("Tom", 차장);
+	m1.addEmployee(&e1);
+	m1.addEmployee(&e2);
+	m1.addEmployee(&e3);
+	cout << endl << "Information for Manager" << endl;
+	cout << m1;
 }
